@@ -1,6 +1,8 @@
 import React from 'react'
 import { shallow } from 'enzyme'
-import App from '../'
+import App from '..'
+
+jest.mock('../../../common/InstitutionIcon', () => 'InstitutionIcon')
 
 describe('App', () => {
   it('matches snapshot', () => {

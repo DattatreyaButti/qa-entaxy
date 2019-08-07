@@ -1,0 +1,58 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TableToolbar matches snapshot with no selected items 1`] = `
+<div
+  className="MuiToolbar-root MuiToolbar-regular TableToolbar-root-1 MuiToolbar-gutters"
+>
+  <div
+    className="TableToolbar-title-5"
+  >
+    <div>
+      <h6
+        className="MuiTypography-root MuiTypography-h6"
+      >
+        Transactions
+      </h6>
+      <span
+        className="MuiTypography-root MuiTypography-caption"
+      />
+    </div>
+  </div>
+  <div
+    className="TableToolbar-spacer-3"
+  />
+  <div
+    className="TableToolbar-actions-4"
+  />
+</div>
+`;
+
+exports[`TableToolbar matches snapshot with some selected items 1`] = `
+<div
+  className="MuiToolbar-root MuiToolbar-regular TableToolbar-root-1 TableToolbar-highlight-2 MuiToolbar-gutters"
+>
+  <div
+    className="TableToolbar-title-5"
+  >
+    <h6
+      className="MuiTypography-root MuiTypography-subtitle1 MuiTypography-colorInherit"
+    >
+      1
+       selected
+    </h6>
+  </div>
+  <div
+    className="TableToolbar-spacer-3"
+  />
+  <div
+    className="TableToolbar-actions-4"
+  >
+    <div>
+      Content 1
+    </div>
+    <div>
+      Content 2
+    </div>
+  </div>
+</div>
+`;

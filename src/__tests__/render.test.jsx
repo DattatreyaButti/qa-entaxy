@@ -1,5 +1,7 @@
 import { JSDOM } from 'jsdom'
-import render from './../render'
+import render from '../render'
+
+jest.mock('../common/InstitutionIcon', () => 'InstitutionIcon')
 
 describe('render', () => {
   it('renders without crashing', () => {

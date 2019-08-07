@@ -11,7 +11,7 @@ Staging site: http://entaxy-staging.s3-website.ca-central-1.amazonaws.com/
 
 ## Running the build on your local machine
 
-Clone the repository on your local machine: 
+Clone the repository on your local machine:
 `git clone https://github.com/twg/entaxy.git`
 
 
@@ -21,7 +21,7 @@ Clone the repository on your local machine:
 
 2- Make sure git is installed: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
 
-Pull the code: 
+Pull the code:
 
 `git clone git@github.com:twg/qa-entaxy.git`
 

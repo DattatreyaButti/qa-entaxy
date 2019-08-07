@@ -1,53 +1,62 @@
 import React from 'react'
 import renderer from 'react-test-renderer'
-import { mount } from 'enzyme'
-import { LoginButtonComponent } from '../'
+import { shallow } from 'enzyme'
+import { LoginButtonComponent } from '..'
 
-describe('HandleLogin', () => {
+describe('LoginButton', () => {
   const mochHandleLogin = jest.fn()
   const mochHandleLogout = jest.fn()
-  const props = {
-    classes: { }
-  }
 
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  it('matches snapshot with logged out user', () => {
+  it('matches snapshot with user logged in with blockstack', () => {
     const component = renderer.create((
       <LoginButtonComponent
-        user={{ isAuthenticated: false }}
+        user={{ isAuthenticatedWith: 'blockstack', name: 'Test name', username: 'Test' }}
         handleLogin={mochHandleLogin}
         handleLogout={mochHandleLogout}
+        classes={{ }}
       />
     ))
     expect(component.toJSON()).toMatchSnapshot()
   })
 
-  it('matches snapshot with logged in user profile', () => {
+  it('matches snapshot with user logged in as guest', () => {
     const component = renderer.create((
       <LoginButtonComponent
-        user={{ isAuthenticated: true, name: 'Test name', username: 'Test' }}
+        user={{ isAuthenticatedWith: 'guest', name: 'Test name', username: 'Test' }}
         handleLogin={mochHandleLogin}
         handleLogout={mochHandleLogout}
-        classes={{ ...props }}
+        classes={{ }}
       />
     ))
     expect(component.toJSON()).toMatchSnapshot()
   })
 
-  it('handles login', () => {
-    const wrapper = mount((
+  describe('Component methods', () => {
+    const wrapper = shallow((
       <LoginButtonComponent
-        user={{ isAuthenticated: false }}
+        user={{ isAuthenticatedWith: 'blockstack', name: 'Test name', username: 'Test' }}
         handleLogin={mochHandleLogin}
         handleLogout={mochHandleLogout}
+        classes={{ }}
       />
     ))
-    expect(wrapper.find('button > span').text()).toBe('Login')
-    wrapper.find('button').simulate('click')
-    expect(mochHandleLogin).toHaveBeenCalled()
-    expect(mochHandleLogout).not.toHaveBeenCalled()
+    const instance = wrapper.instance()
+
+    it('handles button click', async () => {
+      wrapper.setState({ anchorEl: null, open: true })
+      await instance.handleClick({ currentTarget: <div>something</div> })
+      expect(wrapper.state('anchorEl')).toEqual(<div>something</div>)
+      expect(wrapper.state('open')).toBe(false)
+    })
+
+    it('closes popup', async () => {
+      wrapper.setState({ open: true, anchorEl: <div>something</div> })
+      await instance.handleClose()
+      expect(wrapper.state('open')).toBe(false)
+    })
   })
 })

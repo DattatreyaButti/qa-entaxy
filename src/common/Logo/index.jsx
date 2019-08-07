@@ -4,10 +4,12 @@ import Typography from '@material-ui/core/Typography'
 import { Link } from 'react-router-dom'
 import { withStyles } from '@material-ui/core/styles'
 import logoImg from './logo.png'
+import LinkTo from '../LinkTo'
 
 const styles = {
   logo: {
-    display: 'flex'
+    display: 'flex',
+    minWidth: 135
   },
   image: {
     width: '30px',
@@ -21,17 +23,18 @@ const styles = {
 
 const Logo = ({ classes }) => (
   <div className={classes.logo}>
-    <img
-      src={logoImg}
-      className={classes.image}
-      alt="Entaxy logo"
-    />
+    <Link to="/">
+      <img
+        src={logoImg}
+        className={classes.image}
+        alt="Entaxy logo"
+      />
+    </Link>
     <Typography
       variant="h6"
       color="inherit"
       className={classes.title}
-      component={Link}
-      to="/"
+      component={LinkTo('/')}
     >
       Entaxy
     </Typography>

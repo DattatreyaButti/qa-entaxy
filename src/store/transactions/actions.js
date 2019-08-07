@@ -1,45 +1,83 @@
-/* eslint no-console: 0 */
 import uuid from 'uuid/v4'
+import pluralize from 'pluralize'
 import types from './types'
-import { saveState, dataIsLoading } from '../user/actions'
-import { updatePortfolioFilters } from '../settings/actions'
-import { updateMarketValues } from '../marketValues/actions'
-import RbcCsvParser from './CsvParsers/RbcCsvParser'
-import BmoCsvParser from './CsvParsers/BmoCsvParser'
-import TdCsvParser from './CsvParsers/TdCsvParser'
-import TangerineCsvParser from './CsvParsers/TangerineCsvParser'
+import { saveState } from '../user/actions'
+import { updateAccount } from '../accounts/actions'
+import { showSnackbar } from '../settings/actions'
+import { fetchExchangeRates } from '../exchangeRates/actions'
+import { createExactRule, deleteExactRule, countRuleUsage } from '../budget/actions'
 
-const afterTransactionsChanged = async (dispatch) => {
-  await dispatch(updateMarketValues())
-  await dispatch(updatePortfolioFilters())
-  await saveState()
+export const afterTransactionsChanged = account => async (dispatch) => {
+  await dispatch(updateAccount(account, { forceUpdateBalance: true, showMessage: false }))
+  saveState()
 }
 
-export const createTransaction = (transaction) => {
-  return (dispatch) => {
-    dispatch({ type: types.CREATE_TRANSACTION, payload: { ...transaction, id: uuid() } })
-    return afterTransactionsChanged(dispatch)
+// If the rule is not found then the category is cleared from matching transactions
+export const applyExactRule = ({ match, rules }) => (
+  { type: types.APPLY_EXACT_RULE, payload: { match, rules } }
+)
+
+export const createTransaction = (account, transaction) => async (dispatch, getState) => {
+  await dispatch(fetchExchangeRates([account.currency], transaction.createdAt))
+  const id = uuid()
+  dispatch({
+    type: types.CREATE_TRANSACTION,
+    payload: {
+      ...transaction,
+      id,
+      accountId: account.id,
+      createdAt: transaction.createdAt + 1000 // Plus 1 second
+    }
+  })
+  if (transaction.categoryId !== undefined) {
+    dispatch(createExactRule(transaction.categoryId, transaction.description))
   }
+  dispatch(applyExactRule({ match: transaction.description, rules: getState().budget.rules }))
+  dispatch(countRuleUsage())
+  await dispatch(afterTransactionsChanged(account))
+  dispatch(showSnackbar({ text: 'Transaction created', status: 'success' }))
+  return id
 }
 
-export const updateTransaction = (transaction) => {
+export const updateTransaction = (account, transaction) => async (dispatch, getState) => {
+  const oldTransaction = getState().transactions.list.find(t => t.id === transaction.id)
+  dispatch({
+    type: types.UPDATE_TRANSACTION,
+    payload: {
+      ...transaction,
+      createdAt: transaction.createdAt + 1000 // Plus 1 second
+    }
+  })
+
+  if (transaction.categoryId !== oldTransaction.categoryId) {
+    if (transaction.categoryId === undefined) {
+      dispatch(deleteExactRule(transaction.description))
+    } else {
+      dispatch(createExactRule(transaction.categoryId, transaction.description))
+    }
+    dispatch(applyExactRule({ match: transaction.description, rules: getState().budget.rules }))
+    dispatch(countRuleUsage())
+  }
+  await dispatch(afterTransactionsChanged(account))
+  dispatch(showSnackbar({ text: 'Transaction updated', status: 'success' }))
+}
+
+export const updateTransactionFieldIfMatched = ({ fieldName, values, newValue }) => (
+  { type: types.UPATE_TRANSACTION_FIELD_IF_MATCHED, payload: { fieldName, values, newValue } }
+)
+
+export const deleteTransactions = (account, transactionIds, options = { skipAfterChange: false }) => {
+  const { skipAfterChange } = options
   return async (dispatch) => {
-    dispatch({ type: types.UPDATE_TRANSACTION, payload: transaction })
-    return afterTransactionsChanged(dispatch)
-  }
-}
-
-export const deleteTransaction = (index) => {
-  return (dispatch) => {
-    dispatch({ type: types.DELETE_TRANSACTION, payload: index })
-    return afterTransactionsChanged(dispatch)
-  }
-}
-
-export const deleteAllTransactions = () => {
-  return (dispatch) => {
-    dispatch({ type: types.DELETE_ALL_TRANSACTIONS })
-    return afterTransactionsChanged(dispatch)
+    dispatch({ type: types.DELETE_TRANSACTIONS, payload: transactionIds })
+    dispatch(countRuleUsage())
+    if (!skipAfterChange) {
+      await dispatch(afterTransactionsChanged(account))
+      dispatch(showSnackbar({
+        text: `${pluralize('transaction', transactionIds.length, true)} deleted`,
+        status: 'success'
+      }))
+    }
   }
 }
 
@@ -50,31 +88,24 @@ export const loadTransactions = (transactions) => {
 }
 
 // Add new transactions to the existing ones
-export const addTransactions = (transactions) => {
-  return (dispatch) => {
-    dispatch({ type: types.ADD_TRANSACTIONS, payload: transactions })
-    return afterTransactionsChanged(dispatch)
-  }
-}
-
-export const importTransactionsFromCsv = (file, institution) => {
-  return (dispatch) => {
-    const parsers = {
-      RBC: RbcCsvParser,
-      BMO: BmoCsvParser,
-      TD: TdCsvParser,
-      Tangerine: TangerineCsvParser
+export const addTransactions = (account, transactions, options = { skipAfterChange: false }) => {
+  const { skipAfterChange } = options
+  return async (dispatch) => {
+    dispatch({
+      type: types.ADD_TRANSACTIONS,
+      payload: transactions.map(t => Object.assign(t, {
+        id: uuid(),
+        accountId: account.id,
+        createdAt: t.createdAt + 1000 // Plus 1 second
+      }))
+    })
+    dispatch(countRuleUsage())
+    if (!skipAfterChange) {
+      await dispatch(afterTransactionsChanged(account))
     }
-
-    dispatch(dataIsLoading(true))
-    const parser = new parsers[institution](file)
-    return parser.parse()
-      .then((transactions) => {
-        dispatch({ type: types.ADD_TRANSACTIONS, payload: transactions })
-        return afterTransactionsChanged(dispatch)
-      }).catch((errors) => {
-        console.log('ERROR:', errors)
-      }).finally(() => dispatch(dataIsLoading(false)))
   }
 }
 
+export const getAccountTransactions = ({ transactions }, accountId) => {
+  return transactions.list.filter(transaction => transaction.accountId === accountId)
+}

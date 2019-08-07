@@ -2,172 +2,146 @@
 
 exports[`LandingCard matches snapshot 1`] = `
 <div
-  className="MuiGrid-container-9 Landing-root-1"
+  className="MuiGrid-root makeStyles-root-1 MuiGrid-container"
 >
   <div
-    className="MuiGrid-item-10 MuiGrid-grid-xs-6-43 Landing-left-2"
+    className="MuiGrid-root makeStyles-leftLevel1-2 MuiGrid-item MuiGrid-grid-xs-6"
   >
     <div
-      className="Landing-logo-3"
+      className="makeStyles-logoLevel1-4"
     >
       Entaxy
       <div
-        className="Landing-tagline-4"
+        className="makeStyles-taglineLevel1-5"
       >
         Order from chaos
       </div>
     </div>
     <div
-      className="Landing-title-5"
+      className="makeStyles-titleLevel1-6"
     >
-      Your Personal Finance Simple & Private
-      <div
-        className="Landing-description-6"
-      >
-        Insights into your finances, without sacrificing your data
-      </div>
+      Insight into your finances, without sacrificing your data
     </div>
-    <div
-      className="MuiGrid-container-9 Landing-cards-7"
+    <LandingCard
+      history={Object {}}
+    />
+  </div>
+  <div
+    className="MuiGrid-root makeStyles-rightLevel1-3 MuiGrid-item MuiGrid-grid-xs-6"
+  />
+  <div
+    className="MuiGrid-root makeStyles-leftLevel2-7 MuiGrid-item MuiGrid-grid-xs-6"
+  >
+    <img
+      alt="Your Accounts backgoround"
+      className="makeStyles-backgroundImageLevel2-9"
+      src="2.1.png"
+    />
+    <h5
+      className="MuiTypography-root makeStyles-titleLevel2-10 MuiTypography-h5"
     >
-      <div
-        className="MuiPaper-root-109 MuiPaper-elevation1-112 MuiPaper-rounded-110 MuiCard-root-108 LandingCard-card-106"
-      >
-        <div
-          className="MuiCardHeader-root-136"
-        >
-          <div
-            className="MuiCardHeader-content-139"
-          >
-            <span
-              className="MuiTypography-root-142 MuiTypography-headline-147 MuiCardHeader-title-140"
-            >
-              Income Taxes
-            </span>
-            <span
-              className="MuiTypography-root-142 MuiTypography-body1-151 MuiTypography-colorTextSecondary-175 MuiCardHeader-subheader-141"
-            >
-              At some point you will wonder how they work
-            </span>
-          </div>
-          <div
-            className="MuiCardHeader-action-138"
-          >
-            <a
-              className="MuiButtonBase-root-183 MuiIconButton-root-177 MuiIconButton-colorSecondary-180 LandingCard-cardButton-107"
-              href="/taxes"
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onKeyDown={[Function]}
-              onKeyUp={[Function]}
-              onMouseDown={[Function]}
-              onMouseLeave={[Function]}
-              onMouseUp={[Function]}
-              onTouchEnd={[Function]}
-              onTouchMove={[Function]}
-              onTouchStart={[Function]}
-              role="button"
-              tabIndex="0"
-              variant="fab"
-            >
-              <span
-                className="MuiIconButton-label-182"
-              >
-                <svg
-                  aria-hidden="true"
-                  className="MuiSvgIcon-root-186"
-                  focusable="false"
-                  role="presentation"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M0 0h24v24H0z"
-                    fill="none"
-                  />
-                  <path
-                    d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"
-                  />
-                </svg>
-              </span>
-              <span
-                className="MuiTouchRipple-root-195"
-              />
-            </a>
-          </div>
-        </div>
-      </div>
-      <div
-        className="MuiPaper-root-109 MuiPaper-elevation1-112 MuiPaper-rounded-110 MuiCard-root-108 LandingCard-card-106"
-      >
-        <div
-          className="MuiCardHeader-root-136"
-        >
-          <div
-            className="MuiCardHeader-content-139"
-          >
-            <span
-              className="MuiTypography-root-142 MuiTypography-headline-147 MuiCardHeader-title-140"
-            >
-              Portfolio
-            </span>
-            <span
-              className="MuiTypography-root-142 MuiTypography-body1-151 MuiTypography-colorTextSecondary-175 MuiCardHeader-subheader-141"
-            >
-              ETFs, Crypto, etc
-            </span>
-          </div>
-          <div
-            className="MuiCardHeader-action-138"
-          >
-            <a
-              className="MuiButtonBase-root-183 MuiIconButton-root-177 MuiIconButton-colorSecondary-180 LandingCard-cardButton-107"
-              href="/portfolio"
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onKeyDown={[Function]}
-              onKeyUp={[Function]}
-              onMouseDown={[Function]}
-              onMouseLeave={[Function]}
-              onMouseUp={[Function]}
-              onTouchEnd={[Function]}
-              onTouchMove={[Function]}
-              onTouchStart={[Function]}
-              role="button"
-              tabIndex="0"
-              variant="fab"
-            >
-              <span
-                className="MuiIconButton-label-182"
-              >
-                <svg
-                  aria-hidden="true"
-                  className="MuiSvgIcon-root-186"
-                  focusable="false"
-                  role="presentation"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M0 0h24v24H0z"
-                    fill="none"
-                  />
-                  <path
-                    d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"
-                  />
-                </svg>
-              </span>
-              <span
-                className="MuiTouchRipple-root-195"
-              />
-            </a>
-          </div>
-        </div>
-      </div>
+      Your Accounts
+    </h5>
+  </div>
+  <div
+    className="MuiGrid-root makeStyles-rightLevel2-8 MuiGrid-item MuiGrid-grid-xs-6"
+  >
+    <h5
+      className="MuiTypography-root makeStyles-tagLineLevel2-11 MuiTypography-h5 MuiTypography-alignRight"
+    >
+      all in one place
+    </h5>
+    <div
+      className="MuiPaper-root MuiPaper-elevation1 makeStyles-screenshotLevel2-12 MuiPaper-rounded"
+    >
+      <img
+        alt="Your Accounts"
+        src="2.0.png"
+        width="100%"
+      />
     </div>
   </div>
   <div
-    className="MuiGrid-item-10 MuiGrid-grid-xs-6-43 Landing-right-8"
-  />
+    className="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-6"
+  >
+    <h5
+      className="MuiTypography-root makeStyles-titleLevel3-14 MuiTypography-h5"
+    >
+      Your Transactions
+    </h5>
+    <div
+      className="MuiPaper-root MuiPaper-elevation1 makeStyles-screenshotLevel3-16 MuiPaper-rounded"
+    >
+      <img
+        alt="Your Transactions"
+        src="3.0.png"
+        width="100%"
+      />
+    </div>
+  </div>
+  <div
+    className="MuiGrid-root makeStyles-rightLevel3-13 MuiGrid-item MuiGrid-grid-xs-6"
+  >
+    <h5
+      className="MuiTypography-root makeStyles-tagLineLevel3-15 MuiTypography-h5 MuiTypography-alignRight"
+    >
+      owned by you
+    </h5>
+  </div>
+  <div
+    className="MuiGrid-root makeStyles-leftLevel4-17 MuiGrid-item MuiGrid-grid-xs-6"
+  >
+    <h5
+      className="MuiTypography-root makeStyles-titleLeftLevel4-20 MuiTypography-h5"
+    >
+      Budget
+    </h5>
+    <h5
+      className="MuiTypography-root makeStyles-titleRightLevel4-21 MuiTypography-h5 MuiTypography-alignRight"
+    >
+      the way you like
+    </h5>
+  </div>
+  <div
+    className="MuiGrid-root makeStyles-rightLevel4-18 MuiGrid-item MuiGrid-grid-xs-6"
+  >
+    <div
+      className="MuiPaper-root MuiPaper-elevation1 makeStyles-screenshotLevel4-22 MuiPaper-rounded"
+    >
+      <img
+        alt="Budget the way you like"
+        src="4.0.png"
+        width="100%"
+      />
+    </div>
+  </div>
+  <div
+    className="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-6"
+  >
+    <div
+      className="MuiPaper-root MuiPaper-elevation1 makeStyles-screenshotLevel5-25 MuiPaper-rounded"
+    >
+      <img
+        alt="Learn from your data"
+        src="5.0.png"
+        width="100%"
+      />
+    </div>
+    <img
+      alt="Woman drawing"
+      className="makeStyles-backgroundImageLevel5-26"
+      src="5.1.png"
+      width="100%"
+    />
+  </div>
+  <div
+    className="MuiGrid-root makeStyles-rightLevel5-23 MuiGrid-item MuiGrid-grid-xs-6"
+  >
+    <h5
+      className="MuiTypography-root makeStyles-titleLevel5-24 MuiTypography-h5"
+    >
+      Learn from your data
+    </h5>
+  </div>
 </div>
 `;

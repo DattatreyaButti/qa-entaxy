@@ -1,6 +1,8 @@
 import React from 'react'
 import { shallow } from 'enzyme'
-import { TaxesComponent } from '../'
+import { TaxesComponent } from '..'
+
+jest.mock('../../../common/InstitutionIcon', () => 'InstitutionIcon')
 
 describe('Taxes', () => {
   it('matches snapshot', () => {

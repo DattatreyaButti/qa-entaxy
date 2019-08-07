@@ -1,18 +1,20 @@
-import * as blockstack from 'blockstack'
+import { UserSession, Person } from 'blockstack'
 import configureMockStore from 'redux-mock-store'
 import thunk from 'redux-thunk'
 import * as storage from '../../blockstackStorage'
 import { initialState } from '../reducer'
+import { initialState as settingsInitialState } from '../../settings/reducer'
+import { initialState as accountsInitialState } from '../../accounts/reducer'
+import { initialState as transactionsInitialState } from '../../transactions/reducer'
+import { initialState as exchangeRatesInitialState } from '../../exchangeRates/reducer'
+import { initialState as budgetInitialState } from '../../budget/reducer'
 import * as actions from '../actions'
 import types from '../types'
+import { blockstackUserSession, blockstackPerson } from '../../../../mocks/BlockstackMock'
 
-import { initialState as settingsInitialState } from '../../settings/reducer'
-import { initialState as marketValuesInitialState } from '../../marketValues/reducer'
-import { initialState as transactionsInitialState } from '../../transactions/reducer'
-
-jest.mock('blockstack', () => {
-  return require('../../../../mocks/BlockstackServiceMock')
-})
+jest.mock('blockstack')
+UserSession.mockImplementation(() => blockstackUserSession)
+Person.mockImplementation(() => blockstackPerson)
 
 beforeEach(() => {
   jest.resetModules()
@@ -26,52 +28,103 @@ describe('user actions', () => {
     dispatch.mockClear()
   })
 
-  describe('loadUserData', () => {
+  describe('saveLoginData', () => {
     it('signed in user should load the profile', (done) => {
-      const isUserSignedInSpy = jest.spyOn(blockstack, 'isUserSignedIn').mockImplementation(() => true)
+      blockstackUserSession.isUserSignedIn.mockReturnValue(true)
+      const getState = () => ({ user: {} })
 
-      actions.loadUserData()(dispatch).then(() => {
+      actions.loadUserData()(dispatch, getState).then(() => {
         expect(dispatch).toHaveBeenCalledWith({
-          type: types.LOAD_USER_DATA_SUCCESS,
+          type: types.SAVE_LOGIN_DATA,
           payload: {
-            isAuthenticated: true,
+            isLoginPending: false,
+            isAuthenticatedWith: 'blockstack',
             name: 'mocked name',
             pictureUrl: 'mocked url',
             username: 'mocked username'
           }
         })
-        expect(isUserSignedInSpy).toHaveBeenCalled()
+        expect(blockstackUserSession.isUserSignedIn).toHaveBeenCalled()
         done()
       })
     })
 
-    it('logged out user should not set anything', () => {
-      const isUserSignedInSpy = jest.spyOn(blockstack, 'isUserSignedIn').mockImplementation(() => false)
+    it('logged out user should not call anything', () => {
+      blockstackUserSession.isUserSignedIn.mockReturnValue(false)
+      const getState = () => ({ user: { isLoading: false } })
 
-      actions.loadUserData()(dispatch)
+      actions.loadUserData()(dispatch, getState)
+      expect(dispatch).not.toHaveBeenCalledWith({ type: types.DATA_IS_LOADING, payload: false })
+      expect(blockstackUserSession.isUserSignedIn).toHaveBeenCalled()
+    })
 
-      expect(dispatch).not.toHaveBeenCalledWith({ type: types.LOAD_USER_DATA, payload: false })
-      expect(isUserSignedInSpy).toHaveBeenCalled()
+    it('should not call anything if data is already loading', () => {
+      blockstackUserSession.isUserSignedIn.mockReturnValue(true)
+      const getState = () => ({ user: { isLoading: true } })
+
+      actions.loadUserData()(dispatch, getState)
+      expect(dispatch).not.toHaveBeenCalledWith({ type: types.DATA_IS_LOADING, payload: false })
+      expect(blockstackUserSession.isUserSignedIn).not.toHaveBeenCalled()
     })
   })
 
-  it('userLogin should sign the user out', () => {
-    const redirectToSignInSpy = jest.spyOn(blockstack, 'redirectToSignIn')
-    expect(actions.userLogin()).toEqual({ type: types.USER_LOGIN })
-    expect(redirectToSignInSpy).toHaveBeenCalled()
+  describe('loginAs', () => {
+    it('should login as blockstack', () => {
+      actions.loginAs('blockstack')
+      expect(blockstackUserSession.redirectToSignIn).toHaveBeenCalled()
+    })
+
+    it('should login as guest', () => {
+      actions.loginAs('guest')(dispatch)
+      expect(dispatch).toHaveBeenCalledWith({
+        type: types.SAVE_LOGIN_DATA,
+        payload: {
+          isLoginPending: false,
+          isAuthenticatedWith: 'guest',
+          name: 'Guest user',
+          pictureUrl: null,
+          username: 'guest'
+        }
+      })
+      expect(blockstackUserSession.redirectToSignIn).not.toHaveBeenCalled()
+    })
   })
 
-  it('userLogout should sign the user out', () => {
-    const signUserOutSpy = jest.spyOn(blockstack, 'signUserOut')
+  it('resetState should delete all data', async () => {
+    const mockStore = configureMockStore([thunk])
+    const store = mockStore({
+      settings: settingsInitialState
+    })
+    store.dispatch(actions.resetState())
+    expect(store.getActions()).toEqual([
+      {
+        type: 'LOAD_SETTINGS',
+        payload: settingsInitialState
+      },
+      {
+        type: 'LOAD_ACCOUNTS',
+        payload: accountsInitialState
+      },
+      {
+        type: 'LOAD_TRANSACTIONS',
+        payload: transactionsInitialState
+      },
+      {
+        type: 'LOAD_EXCHANGE_RATES',
+        payload: exchangeRatesInitialState
+      },
+      {
+        type: 'LOAD_BUDGET',
+        payload: budgetInitialState
+      }
+    ])
+  })
 
-    actions.userLogout()(dispatch)
-
+  it('userLogout should sign the user out', async () => {
+    await actions.userLogout()(dispatch)
+    expect(blockstackUserSession.signUserOut).toHaveBeenCalled()
+    expect(dispatch).toBeCalledTimes(2)
     expect(dispatch).toBeCalledWith({ type: types.USER_LOGOUT })
-    expect(dispatch).toBeCalledWith({ type: 'LOAD_SETTINGS', payload: settingsInitialState })
-    expect(dispatch).toBeCalledWith({ type: 'LOAD_MARKET_VALUES', payload: marketValuesInitialState })
-    expect(dispatch).toBeCalledWith({ type: 'LOAD_TRANSACTIONS', payload: transactionsInitialState })
-
-    expect(signUserOutSpy).toHaveBeenCalled()
   })
 
   it('userLoginError should sign the user out', () => {
@@ -87,53 +140,45 @@ describe('user actions', () => {
     expect(saveStorageSpy).toHaveBeenCalled()
   })
 
-  it('throws and error on failure to load blockstack storage', (done) => {
-    const error = new Error('message')
-    jest.spyOn(blockstack, 'isUserSignedIn').mockImplementation(() => true)
-    jest.spyOn(storage, 'loadState').mockImplementation(() => Promise.reject(error))
-
-    return actions.loadUserData()(dispatch).catch((e) => {
-      expect(e).toEqual(error)
-      done()
-    })
-  })
-
   describe('handleBlockstackLogin', () => {
     it('signs the user in', (done) => {
       jest.spyOn(storage, 'loadState').mockImplementation(() => Promise.resolve({}))
-      jest.spyOn(blockstack, 'handlePendingSignIn').mockImplementation(() => Promise.resolve())
-      jest.spyOn(blockstack, 'isUserSignedIn').mockImplementation(() => true)
+      blockstackUserSession.handlePendingSignIn.mockReturnValue(Promise.resolve())
+      blockstackUserSession.isUserSignedIn.mockReturnValue(true)
+
       const mockStore = configureMockStore([thunk])
-      const store = mockStore({ initialState })
+      const store = mockStore({ user: { ...initialState, isLoading: false } })
 
       store.dispatch(actions.handleBlockstackLogin())
         .then(() => {
           expect(store.getActions()).toEqual([
-            { type: 'LOAD_USER_DATA', payload: true },
+            { type: 'SHOW_OVERLAY', payload: 'Loading data from Blockstack...' },
             {
-              type: 'LOAD_USER_DATA_SUCCESS',
+              type: 'SAVE_LOGIN_DATA',
               payload: {
-                isAuthenticated: true,
+                isLoginPending: false,
+                isAuthenticatedWith: 'blockstack',
                 username: 'mocked username',
                 name: 'mocked name',
                 pictureUrl: 'mocked url'
               }
             },
-            { type: 'LOAD_SETTINGS', payload: undefined },
+            { type: 'LOAD_SETTINGS', payload: { overlayMessage: '' } },
+            { type: 'LOAD_ACCOUNTS', payload: undefined },
             { type: 'LOAD_TRANSACTIONS', payload: undefined },
-            { type: 'LOAD_MARKET_VALUES', payload: undefined },
-            { type: 'LOAD_USER_DATA', payload: false }
+            { type: 'LOAD_EXCHANGE_RATES', payload: undefined },
+            { type: 'LOAD_BUDGET', payload: undefined },
+            { type: 'HIDE_OVERLAY' }
           ])
           done()
         })
     })
 
     it('fails to sign in', (done) => {
-      const handlePendingSignInSpy = jest.spyOn(blockstack, 'handlePendingSignIn')
       const mockStore = configureMockStore([thunk])
       const store = mockStore({ initialState })
 
-      handlePendingSignInSpy.mockReturnValue(Promise.reject(new Error('Error message')))
+      blockstackUserSession.handlePendingSignIn.mockReturnValue(Promise.reject(new Error('Error message')))
       return store.dispatch(actions.handleBlockstackLogin())
         .then(() => {
           expect(store.getActions()).toEqual([
