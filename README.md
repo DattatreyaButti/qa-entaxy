@@ -1,5 +1,7 @@
 # Entaxy
 
+![Logo](https://github.com/entaxy-project/entaxy/blob/develop/docs/marketing1.png?raw=true)
+
 Entaxy is your personal finance toolbelt.
 It will help you understand and gain control of your financial life.
 
@@ -7,7 +9,7 @@ We want to raise the bar on finance literacy by bringing to light concepts that 
 
 Using beautiful data visualizations we want to build an opinionated framework that will provide you with useful insights and help improve your day to day life by dramatically reducing the financial stress and confusion you may be experiencing
 
-Staging site: http://entaxy-staging.s3-website.ca-central-1.amazonaws.com/
+Check it out at: http://entaxy.io
 
 ## Running the build on your local machine
 
@@ -37,28 +39,32 @@ open `http://localhost:3000/`
 
 
 ## Feature roadmap
+* Decentralized identity and storage with Blockstack
+* Account management
+* Budget management
+	* Income and spending tracking and allocation
+	* Bank statements tracking (securely import your bank transactions)
+	* Statement categorization
+	* Reporting
+	* Receipt management
 * Investments
 	* ETFs / Cryptocurrencies / Stocks / Mutual funds
 	* Keep track of buy prices
 	* Fees tracking + Keep track of deviations from plan
 	* Re-investment calculations
+* Mortgage/debt
+* Pensions
+* Retirement projections
+* Net worth
+* Insurance
+	* Auto/house
+	* Life insurance
+	* Disability
+* Estate planning
 * Taxes
 	* Tax brackets
 	* RRSP and TFSA limits and optimization
-* Mortgage/debt
-* Budget management
-	* Income tracking and allocation
-	* Bank statements tracking (securely import your bank transactions)
-	* Auto statement categorization
-	* Vacation tracking (variable expenses)
-	* Reporting
-	* Receipt management
-* Net worth
-* Retirement projections
-* import/export
-* Insurance
-* Estate planning
-* Pensions
+
 
 ## Contributing
 
