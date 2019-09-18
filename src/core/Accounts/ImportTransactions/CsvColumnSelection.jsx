@@ -17,7 +17,7 @@ import InputLabel from '@material-ui/core/InputLabel'
 import Select from '@material-ui/core/Select'
 import Button from '@material-ui/core/Button'
 import Grid from '@material-ui/core/Grid'
-import green from '@material-ui/core/colors/green'
+import Tooltip from '@material-ui/core/Tooltip'
 import grey from '@material-ui/core/colors/grey'
 
 const useStyles = makeStyles((theme) => ({
@@ -41,20 +41,6 @@ const useStyles = makeStyles((theme) => ({
   submitButton: {
     marginLeft: theme.spacing(2)
   },
-  buttonSuccess: {
-    backgroundColor: green[500],
-    '&:hover': {
-      backgroundColor: green[700]
-    }
-  },
-  buttonProgress: {
-    color: green[500],
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    marginTop: -12,
-    marginLeft: -12
-  },
   tableHeaderForm: {
     position: 'sticky',
     top: 138,
@@ -73,10 +59,16 @@ const useStyles = makeStyles((theme) => ({
   }
 }))
 
-const CsvColumnSelection = ({ handlePrevStep, handleNextStep, parser }) => {
+const CsvColumnSelection = ({
+  parser,
+  handlePrevStep,
+  handleNextStep,
+  setDuplicateTransactions
+}) => {
   const classes = useStyles()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [hasHeaderRow, setHasHeaderRow] = useState(parser.hasHeaderRow)
+  const [invertAmount, setInvertAmount] = useState(parser.invertAmount)
   const [dateFormat, setDateFormat] = useState(parser.dateFormat)
   const [csvHeader, setCsvHeader] = useState(parser.csvHeader)
 
@@ -100,61 +92,84 @@ const CsvColumnSelection = ({ handlePrevStep, handleNextStep, parser }) => {
     setHasHeaderRow(parser.hasHeaderRow)
   }
 
+  const handleChangeInvertAmount = ({ target }) => {
+    // eslint-disable-next-line no-param-reassign
+    parser.invertAmount = target.checked
+    setInvertAmount(parser.invertAmount)
+  }
+
   const handleSubmit = (event) => {
     event.preventDefault()
     setIsSubmitting(true)
     parser.mapToTransactions()
+    setDuplicateTransactions()
     handleNextStep()
   }
   return (
     <form onSubmit={handleSubmit}>
       <Grid container alignItems="center" className={classes.formOptions}>
-        <Grid item xs={3}>
-          <Typography className={classes.smallLabel}>
-            Filename:&nbsp;
-            <Typography variant="caption">
-              <strong>{parser.file.name}</strong>
-              <small>{` (${parser.csvData.length} lines)`}</small>
-            </Typography>
-          </Typography>
+        <Grid item xs={4}>
+          <Tooltip title="When checked, this will tell the importer to ignore the header row">
+            <FormControlLabel
+              className={classes.formField}
+              classes={{ label: classes.smallLabel }}
+              control={(
+                <Checkbox
+                  checked={hasHeaderRow}
+                  onChange={handleChangeHasHeaderRow}
+                  value="hasHeaderRow"
+                />
+              )}
+              label="This file has a header row"
+            />
+          </Tooltip>
         </Grid>
-        <Grid item xs={3}>
-          <FormControlLabel
-            className={classes.formField}
-            classes={{ label: classes.smallLabel }}
-            control={(
-              <Checkbox
-                checked={hasHeaderRow}
-                onChange={handleChangeHasHeaderRow}
-                value="hasHeaderRow"
-              />
-            )}
-            label="This file has a header row"
-          />
+        <Grid item xs={4}>
+          <Tooltip title="This determines how the Date column will be imported">
+            <FormControlLabel
+              value="Date format"
+              label="Date format"
+              labelPlacement="start"
+              classes={{ label: classes.smallLabel }}
+              control={(
+                <Select
+                  value={dateFormat}
+                  onChange={handleChangeDateFormat}
+                  SelectDisplayProps={{ 'data-testid': 'dateFormatDropdown' }}
+                  inputProps={{ name: 'dateFormat', 'data-testid': 'dateFormatInput' }}
+                >
+                  {parser.dateFormats.map((format) => (
+                    <MenuItem key={format} value={format}>{format}</MenuItem>
+                  ))}
+                </Select>
+              )}
+            >
+              <InputLabel htmlFor="dateFormat">Date format</InputLabel>
+            </FormControlLabel>
+          </Tooltip>
         </Grid>
-        <Grid item xs={3}>
-          <FormControlLabel
-            value="Date format"
-            label="Date format"
-            labelPlacement="start"
-            classes={{ label: classes.smallLabel }}
-            control={(
-              <Select
-                value={dateFormat}
-                onChange={handleChangeDateFormat}
-                SelectDisplayProps={{ 'data-testid': 'dateFormatDropdown' }}
-                inputProps={{ name: 'dateFormat', 'data-testid': 'dateFormatInput' }}
-              >
-                {parser.dateFormats.map((format) => (
-                  <MenuItem key={format} value={format}>{format}</MenuItem>
-                ))}
-              </Select>
-            )}
+        <Grid item xs={2}>
+          <Tooltip
+            title="
+              This will convert the imported amounts from positive to negative and vice-versa.
+              It is checked by default for credit card accounts.
+            "
           >
-            <InputLabel htmlFor="dateFormat">Date format</InputLabel>
-          </FormControlLabel>
+            <FormControlLabel
+              className={classes.formField}
+              classes={{ label: classes.smallLabel }}
+              control={(
+                <Checkbox
+                  checked={invertAmount}
+                  onChange={handleChangeInvertAmount}
+                  value="invertAmount"
+                />
+              )}
+              label="Invert amount"
+            />
+          </Tooltip>
         </Grid>
-        <Grid item xs={3}>
+        <Grid item xs={2}>
           <div className={classes.formActions}>
             <Button
               size="small"
@@ -200,6 +215,7 @@ const CsvColumnSelection = ({ handlePrevStep, handleNextStep, parser }) => {
                           <MenuItem
                             key={field}
                             value={field}
+                            dense
                           >
                             {parser.transactionFields[field].label}
                           </MenuItem>
@@ -252,7 +268,8 @@ const CsvColumnSelection = ({ handlePrevStep, handleNextStep, parser }) => {
 CsvColumnSelection.propTypes = {
   parser: PropTypes.object.isRequired,
   handlePrevStep: PropTypes.func.isRequired,
-  handleNextStep: PropTypes.func.isRequired
+  handleNextStep: PropTypes.func.isRequired,
+  setDuplicateTransactions: PropTypes.func.isRequired
 }
 
 export default CsvColumnSelection

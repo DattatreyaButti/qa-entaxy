@@ -1,8 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
-import { withStyles } from '@material-ui/core/styles'
-import { compose } from 'recompose'
-import { connect } from 'react-redux'
+import { makeStyles } from '@material-ui/core/styles'
+import { useSelector, useDispatch } from 'react-redux'
 import { withRouter } from 'react-router-dom'
 import pluralize from 'pluralize'
 import Typography from '@material-ui/core/Typography'
@@ -12,16 +11,15 @@ import Divider from '@material-ui/core/Divider'
 import Stepper from '@material-ui/core/Stepper'
 import Step from '@material-ui/core/Step'
 import StepLabel from '@material-ui/core/StepLabel'
-import green from '@material-ui/core/colors/green'
 import InstitutionIcon from '../../../common/InstitutionIcon'
-import { addTransactions } from '../../../store/transactions/actions'
+import { addTransactions, getAccountTransactions } from '../../../store/transactions/actions'
 import { showSnackbar } from '../../../store/settings/actions'
 import CsvDropzone from './CsvDropzone'
 import CsvColumnSelection from './CsvColumnSelection'
 import ImportedTransactions from './ImportedTransactions'
 import CsvParser from '../../../store/transactions/CsvParsers/CsvParser'
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   root: {
     margin: theme.spacing(2),
     padding: theme.spacing(2),
@@ -40,9 +38,9 @@ const styles = (theme) => ({
     color: `${theme.palette.secondary.main} !important`
   },
   completedStep: {
-    color: `${green[100]} !important`
+    color: `${theme.palette.success.background} !important`
   }
-})
+}))
 
 const steps = [
   'Upload CSV file',
@@ -50,137 +48,157 @@ const steps = [
   'Review data'
 ]
 
-const mapStateToProps = ({ accounts, budget }, props) => ({
-  account: accounts.byId[props.match.params.accountId],
-  budgetRules: budget.rules
-})
+export const ImportTransactionsComponent = ({ history, match }) => {
+  const classes = useStyles()
+  const dispatch = useDispatch()
+  const { account, transactions, budgetRules } = useSelector((state) => ({
+    account: state.accounts.byId[match.params.accountId],
+    transactions: getAccountTransactions(state, match.params.accountId),
+    budgetRules: state.budget.rules
+  }))
 
-const mapDispatchToProps = (dispatch) => ({
-  saveTransactions: (account, transactions) => dispatch(addTransactions(account, transactions)),
-  showSnackbarMessage: (message) => dispatch(showSnackbar(message))
-})
+  const [activeStep, setActiveStep] = useState(0)
+  const [parser, setParser] = useState(new CsvParser({
+    budgetRules,
+    invertAmount: account.accountType === 'credit'
+  }))
 
+  const setDuplicateTransactions = () => (
+    parser.transactions.forEach((newTransaction, index) => {
+      if (newTransaction.errors.length === 0) {
+        const duplicate = transactions.find((transaction) => {
+          // Note: transactions only have date (no time) associated so they are save them d 1 second
+          // ahead so thart the opening balance is always the first transactions of the day
+          return transaction.createdAt === newTransaction.createdAt + 1000
+            && transaction.description === newTransaction.description
+            && transaction.amount === newTransaction.amount
+        })
+        if (duplicate !== undefined) {
+          parser.transactions[index].duplicate = duplicate
+        }
+      }
+    })
+  )
 
-export class ImportTransactionsComponent extends React.Component {
-  state = {
-    activeStep: 0,
-    parser: new CsvParser(this.props.budgetRules)
-  }
-
-  handleSave = async () => {
-    const {
-      saveTransactions,
-      showSnackbarMessage,
-      account,
-      history
-    } = this.props
-    const transactions = this.state.parser.transactions
-      .filter((transaction) => transaction.errors.length === 0)
+  const handleSave = async () => {
+    const newTransaction = parser.transactions
+      .filter((transaction) => (
+        transaction.errors.length === 0 && transaction.duplicate === undefined
+      ))
       .map((transaction) => ({
         amount: transaction.amount,
         description: transaction.description,
         categoryId: transaction.categoryId,
         createdAt: transaction.createdAt
       }))
-    if (transactions.length > 0) {
-      await saveTransactions(account, transactions)
-      showSnackbarMessage({
-        text: `${pluralize('transaction', transactions.length, true)} imported`,
+    if (newTransaction.length > 0) {
+      await dispatch(addTransactions(account, newTransaction))
+      dispatch(showSnackbar({
+        text: `${pluralize('transaction', newTransaction.length, true)} imported`,
         status: 'success'
-      })
+      }))
     }
     history.push(`/accounts/${account.id}/transactions`)
   }
 
-  handleNext = () => {
-    this.setState((prevState) => ({ activeStep: prevState.activeStep + 1 }))
+  const handleNext = () => {
+    setActiveStep((currentStep) => currentStep + 1)
   }
 
-  handlePrev = () => {
-    if (this.state.activeStep === 1) {
-      this.setState({ activeStep: 0, parser: new CsvParser(this.props.budgetRules) })
+  const handlePrev = () => {
+    if (activeStep === 1) {
+      setActiveStep(0)
+      setParser(new CsvParser({
+        budgetRules,
+        invertAmount: account.accountType === 'credit'
+      }))
     } else {
-      this.setState((prevState) => ({ activeStep: prevState.activeStep - 1 }))
+      setActiveStep((currentStep) => currentStep - 1)
     }
   }
 
-  render() {
-    const {
-      parser,
-      activeStep
-    } = this.state
-    const {
-      classes,
-      account
-    } = this.props
-    return (
-      <Grid container direction="row" justify="center">
-        <Paper className={classes.root}>
-          <div className={classes.importHeader}>
-            <Typography variant="h6" align="center">
-              Import transactions from&nbsp;
-              {account.institution}
-            </Typography>
-            <Typography>
-              <InstitutionIcon institution={account.institution} size="small" />
-            </Typography>
-          </div>
-          <Divider />
-          <Grid container>
-            <Grid item xs={12}>
-              <Stepper activeStep={activeStep} className={classes.stepper}>
-                {steps.map((step, index) => (
+  return (
+    <Grid container direction="row" justify="center">
+      <Paper className={classes.root}>
+        <div className={classes.importHeader}>
+          <Typography variant="h6" align="center">
+            Import transactions for {account.institution} - {account.name}
+          </Typography>
+          <Typography>
+            <InstitutionIcon institution={account.institution} size="small" />
+          </Typography>
+        </div>
+        <Divider />
+        <Grid container>
+          <Grid item xs={12}>
+            <Stepper activeStep={activeStep} className={classes.stepper}>
+              {steps.map((step, index) => {
+                let optionalText = null
+                switch (index) {
+                  case 0:
+                    if (parser.file) {
+                      optionalText = parser.file.name
+                    }
+                    break
+                  case 1:
+                    if (parser.file) {
+                      optionalText = `Read ${pluralize('lines', parser.csvData.length, true)} from CSV`
+                    }
+                    break
+                  case 2:
+                    if (activeStep >= index) {
+                      optionalText = `Loaded ${parser.transactions.length} transactions`
+                    }
+                    break
+                  // no default
+                }
+                return (
                   <Step key={step}>
                     <StepLabel
+                      optional={<small>{optionalText}</small>}
                       data-testid={activeStep === index ? 'activeStep' : null}
                       StepIconProps={{ classes: { active: classes.activeStep, completed: classes.completedStep } }}
                     >
                       {step}
                     </StepLabel>
                   </Step>
-                ))}
-              </Stepper>
-            </Grid>
-            <Grid item xs={12}>
-              {activeStep === 0 && (
-                <CsvDropzone
-                  handleNextStep={this.handleNext}
-                  parser={parser}
-                />
-              )}
-              {activeStep === 1 && (
-                <CsvColumnSelection
-                  handlePrevStep={this.handlePrev}
-                  handleNextStep={this.handleNext}
-                  parser={parser}
-                />
-              )}
-              {activeStep === 2 && (
-                <ImportedTransactions
-                  account={account}
-                  parser={parser}
-                  handlePrevStep={this.handlePrev}
-                  onSave={this.handleSave}
-                />
-              )}
-            </Grid>
+                )
+              })}
+            </Stepper>
           </Grid>
-        </Paper>
-      </Grid>
-    )
-  }
+          <Grid item xs={12}>
+            {activeStep === 0 && (
+              <CsvDropzone
+                handleNextStep={handleNext}
+                parser={parser}
+              />
+            )}
+            {activeStep === 1 && (
+              <CsvColumnSelection
+                handlePrevStep={handlePrev}
+                handleNextStep={handleNext}
+                setDuplicateTransactions={setDuplicateTransactions}
+                parser={parser}
+              />
+            )}
+            {activeStep === 2 && (
+              <ImportedTransactions
+                account={account}
+                handlePrevStep={handlePrev}
+                handleNextStep={handleSave}
+                parser={parser}
+              />
+            )}
+          </Grid>
+        </Grid>
+      </Paper>
+    </Grid>
+  )
 }
 
 ImportTransactionsComponent.propTypes = {
-  classes: PropTypes.object.isRequired,
-  account: PropTypes.object.isRequired,
-  budgetRules: PropTypes.object.isRequired,
   history: PropTypes.object.isRequired,
-  saveTransactions: PropTypes.func.isRequired,
-  showSnackbarMessage: PropTypes.func.isRequired
+  match: PropTypes.object.isRequired
 }
 
-export default withRouter(compose(
-  connect(mapStateToProps, mapDispatchToProps),
-  withStyles(styles),
-)(ImportTransactionsComponent))
+export default withRouter(ImportTransactionsComponent)

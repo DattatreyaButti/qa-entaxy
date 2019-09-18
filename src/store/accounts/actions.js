@@ -2,7 +2,6 @@
 import uuid from 'uuid/v4'
 import Big from 'big.js'
 import types from './types'
-import { saveState } from '../storage'
 import { showSnackbar } from '../settings/actions'
 import {
   addTransactions,
@@ -55,7 +54,6 @@ export const afterAccountsChanged = () => async (dispatch, getState) => {
   await dispatch(updateCurrencies(dispatch, getState()))
   convertAccountsBalancesToLocalCurrency(dispatch, getState)
   dispatch({ type: types.GROUP_BY_INSTITUTION })
-  dispatch(saveState())
 }
 
 export const openingBalanceChanged = (oldAccount, newAccount) => (
@@ -107,8 +105,8 @@ export const updateAccount = (account, options = { forceUpdateBalance: false, sh
 
 // --- DELETE ---
 export const deleteAccount = (account, options = { skipAfterChange: false }) => {
-  const { skipAfterChange } = options
   return async (dispatch, getState) => {
+    const { skipAfterChange } = options
     const transactionIds = getAccountTransactions(getState(), account.id).map((transaction) => transaction.id)
 
     dispatch(deleteTransactions(account, transactionIds, { skipAfterChange: true }))
