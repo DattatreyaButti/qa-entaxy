@@ -62,14 +62,15 @@ export const getPaginatedDataFrom = async (apiKey, apiSecret, url, params) => {
 
 export const normalizeAccounts = (accounts) => (
   accounts.map((account) => ({
-    type: 'wallet', // TODO check for other types
+    accountType: 'wallet',
     sourceId: account.id,
     name: account.name,
     // currency: account.native_balance.currency,
     currency: account.currency,
     // symbol: account.currency,
     openingBalance: 0,
-    openingBalanceDate: parseISO(account.created_at).getTime()
+    openingBalanceDate: parseISO(account.created_at).getTime(),
+    currentBalance: { accountCurrency: null }
   }))
 )
 
@@ -77,7 +78,9 @@ export const normalizeTransactions = (transactions) => (
   transactions.map((transaction) => ({
     sourceId: transaction.id,
     description: [transaction.details.title, transaction.details.subtitle].join(' - '),
-    amount: parseFloat(Big(transaction.amount.amount)),
+    amount: {
+      accountCurrency: parseFloat(Big(transaction.amount.amount))
+    },
     createdAt: parseISO(transaction.created_at).getTime()
   }))
   // localCurrency: parseFloat(Big(transaction.native_amount.amount))

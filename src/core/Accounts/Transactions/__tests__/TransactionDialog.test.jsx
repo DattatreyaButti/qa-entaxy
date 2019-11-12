@@ -15,6 +15,7 @@ beforeEach(() => {
 
 describe('ConfirmDialog', () => {
   const mockHandleCancel = jest.fn()
+  const mockHandleDelete = jest.fn()
 
   it('matches snapshot', () => {
     const mockStore = configureMockStore()
@@ -29,8 +30,9 @@ describe('ConfirmDialog', () => {
             <TransactionDialog
               open={true}
               onCancel={mockHandleCancel}
+              onDelete={mockHandleDelete}
               account={{ id: 1 }}
-              transaction={{ id: 1, createdAt: new Date('2019-01-01') }}
+              transaction={{ id: 1, createdAt: new Date('2019-01-01'), amount: { localCurrency: 1 } }}
             />
           </ThemeProvider>
         </Provider>

@@ -1,11 +1,16 @@
 /* eslint-disable no-case-declarations */
 import types from './types'
 
-export const accountTypes = {
+export const assetAccounts = {
   bank: 'Bank',
-  cash: 'Cash',
+  cash: 'Cash in hand'
+  // wallet: 'Cryptocurrency wallet'
+}
+
+export const liabilityAccounts = {
   credit: 'Credit card'
 }
+export const accountTypes = { ...assetAccounts, ...liabilityAccounts }
 
 export const initialState = {
   byId: {}, // {id1: {id: id1, name: 'account1', institution: 'TD'}, id2: {...}}

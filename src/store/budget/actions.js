@@ -1,11 +1,15 @@
 /* eslint-disable import/no-cycle */
 import uuid from 'uuid/v4'
 import types from './types'
-import { showSnackbar } from '../settings/actions'
+import { showSnackbar } from '../user/actions'
 import { updateTransactionFieldIfMatched } from '../transactions/actions'
 
 export const loadBudget = (budget) => {
   return { type: types.LOAD_BUDGET, payload: budget }
+}
+
+export const resetColours = () => {
+  return { type: types.RESET_COLOURS }
 }
 
 export const createCategory = (category, parentId) => (dispatch) => {

@@ -221,22 +221,27 @@ export default class CsvParser {
     this._csvData.forEach((row, index) => {
       if (!this._hasHeaderRow || index > this._firstRowIndex) {
         const transaction = {
-          amount: this.readAmount(row, columns),
+          amount: {
+            accountCurrency: this.readAmount(row, columns),
+            localCurrency: null
+          },
           description: this.readDescription(row, columns),
           createdAt: this.dateFromString(row[columns.createdAt]),
           errors: [],
           line: index + 1
         }
+        // Set the category
         if (
           transaction.description in this._budgetRules
           && 'categoryId' in this._budgetRules[transaction.description]
         ) {
           transaction.categoryId = this._budgetRules[transaction.description].categoryId
         }
-        if (typeof transaction.amount !== 'number') {
-          transaction.errors.push('Could not read the amount')
-        } else if (transaction.createdAt === null) {
+        // Check for errors
+        if (transaction.createdAt === null) {
           transaction.errors.push(`Invalid date. Expecting format '${this._dateFormat}'`)
+        } else if (typeof transaction.amount.accountCurrency !== 'number') {
+          transaction.errors.push('Could not read the amount')
         }
         this._transactions.push(transaction)
       }
@@ -260,7 +265,7 @@ export default class CsvParser {
       if (Object.keys(columns).includes(column)) {
         return [
           ...acc,
-          (isNil(row[columns[column]]) ? '' : row[columns[column]].trim())
+          (isNil(row[columns[column]]) ? '' : row[columns[column]].toString().trim())
         ]
       }
       return acc

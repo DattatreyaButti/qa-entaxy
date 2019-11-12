@@ -17,6 +17,7 @@ import { initialState as exchangeRatesInitialState } from './exchangeRates/reduc
 import { initialState as budgetInitialState } from './budget/reducer'
 import { updateLoginData } from './user/actions'
 import types from './user/types'
+import avatarImg from '../common/LoginButton/avatar.png'
 
 
 // Set middlewares
@@ -80,8 +81,16 @@ const setPersistor = ({ storageType }) => {
   }
 
   if (persistConfig.storage === undefined) {
-    store.replaceReducer(rootReducer)
+    persistor.pause()
     persistor = null
+
+    // Note: forcing reload to prevent the persistor from
+    // re-dispatching all previously performed actions
+    // could not find a solution for this so I'm just forcing a reload
+    if (process.env.NODE_ENV === 'test') {
+      store.replaceReducer(rootReducer)
+    }
+    // window.location.reload()
   } else {
     store.replaceReducer(persistReducer(persistConfig, rootReducer))
     persistor = persistStore(store)
@@ -100,8 +109,8 @@ export const loginAs = (loginType) => {
         overlayMessage: 'Loading data from Blockstack ...',
         isAuthenticatedWith: 'blockstack',
         username,
-        name: person.name(),
-        pictureUrl: person.avatarUrl()
+        name: person.name() || username.split('.')[0],
+        pictureUrl: person.avatarUrl() || avatarImg
       }))
     } else if (!userSession.isSignInPending()) {
       // Open the blockstack browser for sign in
@@ -113,7 +122,7 @@ export const loginAs = (loginType) => {
       isAuthenticatedWith: 'guest',
       username: 'guest',
       name: 'Guest user',
-      pictureUrl: null
+      pictureUrl: avatarImg
     }))
     setPersistor({ storageType: 'local' })
   }
